@@ -1,0 +1,39 @@
+plugins {
+    id 'java-library'
+}
+
+group 'io.easeci'
+version '0.0.1'
+
+sourceCompatibility = '17'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'domain')
+    implementation project(':domain')
+}
+
+jar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    manifest {
+        attributes(
+                'Class-Path': configurations.runtimeClasspath.collect { it.getName() }.join(' '),
+                'Main-Class': "${mainClassName}",
+                'Implements': 'io.easeci.extension.command.Directive',
+                'Entry-Class': 'io.easeci.python.PythonPerformer'
+        )
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+afterEvaluate {
+    tasks.getByName("jar") {
+        dependsOn(":domain:build")
+        dependsOn(":io-lib:build")
+    }
+}
